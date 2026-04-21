@@ -2,17 +2,16 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/min0625/tz.svg)](https://pkg.go.dev/github.com/min0625/tz)
 
 ## Features
-- TimeZone based on time.LoadLocation format, Not support the "Local" time zone.
-- The format is "UTC" or IANA time zone database name. See: https://www.iana.org/time-zones.
-- The zero value means UTC time zone.
-- The UTC time zone always uses a zero value.
-- Implement the fmt.Stringer interface.
-- Implement the sql.Scanner interface.
-- Implement the driver.Valuer interface.
-- Implement the encoding.TextMarshaler interface.
-- Implement the encoding.TextUnmarshaler interface.
-- Implement the json.Marshaler interface.
-- Implement the json.Unmarshaler interface.
+- Based on `time.LoadLocation` format; the `"Local"` time zone is not supported.
+- Accepts `"UTC"`, an empty string, or any IANA time zone database name (e.g. `"America/New_York"`). See: https://www.iana.org/time-zones.
+- The zero value represents the UTC time zone; loading `"UTC"` or `""` always produces the zero value.
+- Implements `fmt.Stringer`
+- Implements `sql.Scanner`
+- Implements `driver.Valuer`
+- Implements `encoding.TextMarshaler`
+- Implements `encoding.TextUnmarshaler`
+- Implements `json.Marshaler`
+- Implements `json.Unmarshaler`
 
 ## Installation
 ```sh
@@ -20,6 +19,10 @@ go get github.com/min0625/tz
 ```
 
 ## Quick start
+
+> **Note**: Import `_ "time/tzdata"` to embed the IANA time zone database directly into your binary,
+> so it works correctly in environments where the system timezone data may be absent (e.g. scratch/Alpine containers).
+
 ```go
 package main
 
@@ -44,7 +47,6 @@ func main() {
 	// America/New_York
 	// America/New_York
 }
-
 ```
 
 ## Example

@@ -1,13 +1,16 @@
-format:
-	@go install mvdan.cc/gofumpt@latest
-	gofumpt -l -w -extra .
+NEW_FROM_REV ?= HEAD
+
+fix:
+	go mod tidy
+	golangci-lint run -v --new-from-rev=$(NEW_FROM_REV) --fix ./...
 
 lint:
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1
-	golangci-lint run ./...
+	golangci-lint run -v --new-from-rev=$(NEW_FROM_REV) ./...
 
 test:
-	go test ./...
+	go test -v -race -failfast ./...
 
-check: format lint test
-	go mod tidy
+check-tidy:
+	go mod tidy -diff
+
+check: check-tidy lint test
