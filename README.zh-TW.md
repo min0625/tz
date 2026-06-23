@@ -12,7 +12,7 @@
 - **零值即 UTC** — `TimeZone{}` 代表 UTC；載入 `"UTC"` 或 `""` 必定回傳零值。
 - **IANA 名稱** — 接受任何 [IANA 時區資料庫](https://www.iana.org/time-zones) 名稱（例如 `"America/New_York"`）。
 - **不支援 `"Local"`** — `"Local"` 時區一律以錯誤拒絕。
-- **可比較** — `TimeZone` 為一般結構體；可直接使用 `==` 進行相等判斷。
+- **相等判斷** — 請使用 `Equal` 方法進行比較；由於 `TimeZone` 內含 `*time.Location` 指標，`==` 僅適用於與零值比較。
 - **豐富的介面支援** — 實作 `fmt.Stringer`、`sql.Scanner`、`driver.Valuer`、`encoding.TextMarshaler/Unmarshaler` 及 `json.Marshaler/Unmarshaler`。
 - **零相依** — 完全建構於標準函式庫之上。
 
@@ -49,7 +49,11 @@ func main() {
 	fmt.Println(z)                                      // America/New_York
 	fmt.Println(time.Now().In(z.Location()).Location()) // America/New_York
 
-	// UTC 為零值
+	// 請使用 Equal 進行比較；對已載入的時區而言 == 並不可靠。
+	other := tz.MustLoadTimeZone("America/New_York")
+	fmt.Println(z.Equal(other)) // true
+
+	// UTC 為零值。
 	utc, _ := tz.LoadTimeZone("UTC")
 	fmt.Println(utc == tz.TimeZone{}) // true
 }
