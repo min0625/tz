@@ -13,3 +13,12 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# coverage output
+coverage.out
+coverage.html
+
+# Local configuration files
+*.local.*
+*.local/
+*.local

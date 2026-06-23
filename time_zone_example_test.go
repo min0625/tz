@@ -1,6 +1,7 @@
 package tz_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 	_ "time/tzdata"
@@ -67,4 +68,67 @@ func ExampleTimeZone_Value_zeroValue() {
 
 	// Output:
 	// UTC string <nil>
+}
+
+func ExampleUTCTimeZone() {
+	z, _ := tz.LoadTimeZone("UTC")
+	fmt.Println(z == tz.UTCTimeZone)
+
+	// Output:
+	// true
+}
+
+func ExampleTimeZone_MarshalText() {
+	z, _ := tz.LoadTimeZone("Asia/Tokyo")
+	text, _ := z.MarshalText()
+	fmt.Println(string(text))
+
+	// Output:
+	// Asia/Tokyo
+}
+
+func ExampleTimeZone_UnmarshalText() {
+	var z tz.TimeZone
+
+	_ = z.UnmarshalText([]byte("Asia/Tokyo"))
+	fmt.Println(z)
+
+	// Output:
+	// Asia/Tokyo
+}
+
+func ExampleTimeZone_MarshalJSON() {
+	type Event struct {
+		Name     string      `json:"name"`
+		TimeZone tz.TimeZone `json:"time_zone"`
+	}
+
+	e := Event{Name: "Meeting", TimeZone: func() tz.TimeZone { z, _ := tz.LoadTimeZone("Europe/London"); return z }()}
+
+	data, err := json.Marshal(e)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(data))
+
+	// Output:
+	// {"name":"Meeting","time_zone":"Europe/London"}
+}
+
+func ExampleTimeZone_UnmarshalJSON() {
+	type Event struct {
+		Name     string      `json:"name"`
+		TimeZone tz.TimeZone `json:"time_zone"`
+	}
+
+	data := []byte(`{"name":"Meeting","time_zone":"Europe/London"}`)
+
+	var e Event
+
+	_ = json.Unmarshal(data, &e)
+	fmt.Println(e.Name, e.TimeZone)
+
+	// Output:
+	// Meeting Europe/London
 }

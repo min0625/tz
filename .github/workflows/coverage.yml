@@ -1,20 +1,22 @@
-name: PR Check
+name: Coverage
 
 on:
-  pull_request:
+  push:
     branches:
       - main
+    tags:
+      - 'v*'
 
 permissions:
   contents: read
 
 concurrency:
-  group: pr-check-${{ github.ref }}
+  group: coverage-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  check:
-    name: Check
+  coverage:
+    name: Coverage
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -35,15 +37,16 @@ jobs:
           key: go-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
           restore-keys: go-${{ runner.os }}-
 
-      - name: Cache golangci-lint
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/golangci-lint
-          key: golangci-lint-${{ runner.os }}-${{ hashFiles('mise.toml', '.golangci.yaml') }}
-          restore-keys: golangci-lint-${{ runner.os }}-
-
       - name: Download Go dependencies
         run: go mod download
 
-      - name: Run check
-        run: make check NEW_FROM_REV=origin/${{ github.base_ref }}
+      - name: Run tests with coverage
+        run: make cover
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage.out
+          fail_ci_if_error: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
