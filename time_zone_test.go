@@ -53,6 +53,12 @@ func TestLoadTimeZone(t *testing.T) {
 			want:     mustLoadTimeZone(t, "America/New_York"),
 			wantErr:  false,
 		},
+		{
+			testName: "InvalidName",
+			name:     "Invalid/Zone",
+			want:     tz.TimeZone{},
+			wantErr:  true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
@@ -73,6 +79,16 @@ func TestLoadTimeZone(t *testing.T) {
 func TestTimeZone_Location_ZeroValueReturnUTC(t *testing.T) {
 	t.Parallel()
 	assert.Same(t, tz.TimeZone{}.Location(), time.UTC)
+}
+
+func TestTimeZone_Location_NonUTC(t *testing.T) {
+	t.Parallel()
+
+	z := mustLoadTimeZone(t, "America/New_York")
+	loc := z.Location()
+
+	assert.Equal(t, "America/New_York", loc.String())
+	assert.NotSame(t, loc, time.UTC)
 }
 
 func TestTimeZone_LoadString(t *testing.T) {
@@ -358,9 +374,22 @@ func TestTimeZone_UnmarshalText(t *testing.T) {
 			wantErr:      false,
 		},
 		{
+			name:         "Empty",
+			data:         []byte(""),
+			wantTimeZone: tz.TimeZone{},
+			wantErr:      false,
+		},
+		{
 			name:         "ErrName",
 			giveTimeZone: mustLoadTimeZone(t, "America/New_York"),
 			data:         []byte("ErrName"),
+			wantTimeZone: mustLoadTimeZone(t, "America/New_York"),
+			wantErr:      true,
+		},
+		{
+			name:         "Local",
+			giveTimeZone: mustLoadTimeZone(t, "America/New_York"),
+			data:         []byte("Local"),
 			wantTimeZone: mustLoadTimeZone(t, "America/New_York"),
 			wantErr:      true,
 		},
@@ -463,6 +492,20 @@ func TestTimeZone_UnmarshalJSON(t *testing.T) {
 			wantTimeZone: mustLoadTimeZone(t, "America/New_York"),
 			wantErr:      false,
 		},
+		{
+			name:         "Local",
+			giveTimeZone: mustLoadTimeZone(t, "America/New_York"),
+			data:         []byte(`"Local"`),
+			wantTimeZone: mustLoadTimeZone(t, "America/New_York"),
+			wantErr:      true,
+		},
+		{
+			name:         "NumberNotString",
+			giveTimeZone: mustLoadTimeZone(t, "America/New_York"),
+			data:         []byte(`123`),
+			wantTimeZone: mustLoadTimeZone(t, "America/New_York"),
+			wantErr:      true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -478,6 +521,63 @@ func TestTimeZone_UnmarshalJSON(t *testing.T) {
 			}
 
 			assert.Equal(t, tt.wantTimeZone, z)
+		})
+	}
+}
+
+func TestTimeZone_JSONRoundTrip(t *testing.T) {
+	t.Parallel()
+
+	for _, name := range []string{"", "UTC", "America/New_York", "Asia/Tokyo", "Europe/London"} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			original := mustLoadTimeZone(t, name)
+
+			data, err := original.MarshalJSON()
+			require.NoError(t, err)
+
+			var decoded tz.TimeZone
+			require.NoError(t, decoded.UnmarshalJSON(data))
+			assert.Equal(t, original, decoded)
+		})
+	}
+}
+
+func TestTimeZone_TextRoundTrip(t *testing.T) {
+	t.Parallel()
+
+	for _, name := range []string{"", "UTC", "America/New_York", "Asia/Tokyo", "Europe/London"} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			original := mustLoadTimeZone(t, name)
+
+			text, err := original.MarshalText()
+			require.NoError(t, err)
+
+			var decoded tz.TimeZone
+			require.NoError(t, decoded.UnmarshalText(text))
+			assert.Equal(t, original, decoded)
+		})
+	}
+}
+
+func TestTimeZone_SQLRoundTrip(t *testing.T) {
+	t.Parallel()
+
+	for _, name := range []string{"UTC", "America/New_York", "Asia/Tokyo", "Europe/London"} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			original := mustLoadTimeZone(t, name)
+
+			v, err := original.Value()
+			require.NoError(t, err)
+
+			var decoded tz.TimeZone
+			require.NoError(t, decoded.Scan(v))
+			assert.Equal(t, original, decoded)
 		})
 	}
 }
