@@ -12,7 +12,7 @@ A small Go library providing a `TimeZone` type backed by the IANA time zone data
 - **Zero value is UTC** — `TimeZone{}` represents UTC; loading `"UTC"` or `""` always yields the zero value.
 - **IANA names** — accepts any [IANA time zone database](https://www.iana.org/time-zones) name (e.g. `"America/New_York"`).
 - **No `"Local"`** — the `"Local"` time zone is always rejected with an error.
-- **Comparable** — `TimeZone` is a plain struct; use `==` for equality checks.
+- **Equality** — compare values with the `Equal` method; `==` is only reliable against the zero value, since a `TimeZone` holds a `*time.Location` pointer.
 - **Rich interface support** — implements `fmt.Stringer`, `sql.Scanner`, `driver.Valuer`, `encoding.TextMarshaler/Unmarshaler`, and `json.Marshaler/Unmarshaler`.
 - **No dependencies** — built entirely on the standard library.
 
@@ -49,7 +49,11 @@ func main() {
 	fmt.Println(z)                                      // America/New_York
 	fmt.Println(time.Now().In(z.Location()).Location()) // America/New_York
 
-	// UTC is the zero value
+	// Compare with Equal; == is unreliable for loaded zones.
+	other := tz.MustLoadTimeZone("America/New_York")
+	fmt.Println(z.Equal(other)) // true
+
+	// UTC is the zero value.
 	utc, _ := tz.LoadTimeZone("UTC")
 	fmt.Println(utc == tz.TimeZone{}) // true
 }

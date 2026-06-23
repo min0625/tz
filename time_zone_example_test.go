@@ -57,12 +57,46 @@ func ExampleTimeZone_Equal() {
 	// true
 }
 
+func ExampleLoadTimeZone_errors() {
+	// "Local" is always rejected.
+	_, err := tz.LoadTimeZone("Local")
+	fmt.Println(err != nil)
+
+	// An unknown name is rejected too.
+	_, err = tz.LoadTimeZone("Not/A_Zone")
+	fmt.Println(err != nil)
+
+	// Output:
+	// true
+	// true
+}
+
 func ExampleMustLoadTimeZone() {
 	z := tz.MustLoadTimeZone("America/New_York")
 	fmt.Println(z.String())
 
 	// Output:
 	// America/New_York
+}
+
+func ExampleTimeZone_LoadString() {
+	var z tz.TimeZone
+	if err := z.LoadString("Asia/Tokyo"); err != nil {
+		panic(err)
+	}
+
+	fmt.Println(z)
+
+	// Loading "UTC" (or an empty string) resets z to the zero value.
+	if err := z.LoadString("UTC"); err != nil {
+		panic(err)
+	}
+
+	fmt.Println(z == tz.TimeZone{})
+
+	// Output:
+	// Asia/Tokyo
+	// true
 }
 
 func ExampleTimeZone_Scan() {
