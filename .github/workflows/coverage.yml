@@ -6,6 +6,9 @@ on:
       - main
     tags:
       - 'v*'
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -47,6 +50,7 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           files: coverage.out
-          fail_ci_if_error: true
+          # Fork PRs upload tokenlessly, which can be flaky; don't fail their CI.
+          fail_ci_if_error: ${{ github.event_name != 'pull_request' }}
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

@@ -35,6 +35,14 @@ func ExampleTimeZone_zeroValue() {
 	// true
 }
 
+func ExampleMustLoadTimeZone() {
+	z := tz.MustLoadTimeZone("America/New_York")
+	fmt.Println(z.String())
+
+	// Output:
+	// America/New_York
+}
+
 func ExampleTimeZone_Scan() {
 	var z tz.TimeZone
 	if err := z.Scan("America/New_York"); err != nil {
@@ -71,7 +79,7 @@ func ExampleTimeZone_Value_zeroValue() {
 }
 
 func ExampleUTCTimeZone() {
-	z, _ := tz.LoadTimeZone("UTC")
+	z := tz.MustLoadTimeZone("UTC")
 	fmt.Println(z == tz.UTCTimeZone)
 
 	// Output:
@@ -79,7 +87,7 @@ func ExampleUTCTimeZone() {
 }
 
 func ExampleTimeZone_MarshalText() {
-	z, _ := tz.LoadTimeZone("Asia/Tokyo")
+	z := tz.MustLoadTimeZone("Asia/Tokyo")
 	text, _ := z.MarshalText()
 	fmt.Println(string(text))
 
@@ -103,7 +111,10 @@ func ExampleTimeZone_MarshalJSON() {
 		TimeZone tz.TimeZone `json:"time_zone"`
 	}
 
-	e := Event{Name: "Meeting", TimeZone: func() tz.TimeZone { z, _ := tz.LoadTimeZone("Europe/London"); return z }()}
+	e := Event{
+		Name:     "Meeting",
+		TimeZone: tz.MustLoadTimeZone("Europe/London"),
+	}
 
 	data, err := json.Marshal(e)
 	if err != nil {

@@ -112,3 +112,13 @@ linters:
               desc: Use github.com/go-resty/resty/v2 instead
             - pkg: github.com/aws/smithy-go/ptr$
               desc: Use github.com/aws/aws-sdk-go-v2/aws instead
+
+  exclusions:
+    rules:
+      # TimeZone intentionally mixes receivers: Scan/LoadString/Unmarshal* need
+      # pointer receivers to mutate, while the rest stay value receivers to keep
+      # the zero-value-as-UTC value semantics.
+      - linters:
+          - recvcheck
+        path: time_zone.go
+        text: 'the methods of "TimeZone"'
