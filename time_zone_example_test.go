@@ -16,7 +16,10 @@ func ExampleTimeZone() {
 	}
 
 	fmt.Println(z.String())
-	fmt.Println(time.Time{}.In(z.Location()).Location().String())
+
+	// Location returns a *time.Location that can be applied to a time.Time.
+	loc := z.Location()
+	fmt.Println(time.Time{}.In(loc).Location().String())
 
 	// Output:
 	// America/New_York
@@ -24,6 +27,7 @@ func ExampleTimeZone() {
 }
 
 func ExampleTimeZone_zeroValue() {
+	// Loading "UTC" (or an empty string) always yields the zero value.
 	z, err := tz.LoadTimeZone("UTC")
 	if err != nil {
 		panic(err)
@@ -71,6 +75,7 @@ func ExampleTimeZone_Value() {
 func ExampleTimeZone_Value_zeroValue() {
 	var z tz.TimeZone
 
+	// The zero value is stored as the "UTC" string, never as NULL.
 	v, err := z.Value()
 	fmt.Printf("%v %T %v\n", v, v, err)
 
