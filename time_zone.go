@@ -17,6 +17,12 @@ import (
 // See: https://www.iana.org/time-zones.
 // The zero value represents the UTC time zone.
 // Loading "UTC" or an empty string always results in the zero value.
+//
+// To compare two TimeZone values, use the [TimeZone.Equal] method rather than
+// the == operator. A TimeZone holds a *time.Location, and time.LoadLocation
+// returns a distinct pointer on each call, so two values loaded from the same
+// name are not guaranteed to be ==. (Comparing against the zero value with
+// == is safe, since the zero value holds a nil pointer.)
 type TimeZone struct {
 	loc *time.Location
 }
@@ -28,6 +34,7 @@ var (
 	_ fmt.Stringer             = TimeZone{}
 	_ sql.Scanner              = &TimeZone{}
 	_ driver.Valuer            = TimeZone{}
+	_ encoding.TextAppender    = TimeZone{}
 	_ encoding.TextMarshaler   = TimeZone{}
 	_ encoding.TextUnmarshaler = &TimeZone{}
 	_ json.Marshaler           = TimeZone{}
@@ -66,6 +73,15 @@ func (z TimeZone) Location() *time.Location {
 	}
 
 	return time.UTC
+}
+
+// Equal reports whether z and other represent the same IANA time zone.
+//
+// Use Equal instead of the == operator: a TimeZone holds a *time.Location,
+// and time.LoadLocation returns a distinct pointer on each call, so two
+// TimeZone values loaded from the same name are not guaranteed to be ==.
+func (z TimeZone) Equal(other TimeZone) bool {
+	return z.String() == other.String()
 }
 
 // LoadString loads a TimeZone by IANA time zone name.
@@ -119,10 +135,17 @@ func (z TimeZone) Value() (driver.Value, error) {
 	return z.String(), nil
 }
 
+// AppendText implements the encoding.TextAppender interface.
+// It appends the IANA time zone name (e.g. "America/New_York" or "UTC") to b
+// and returns the extended buffer.
+func (z TimeZone) AppendText(b []byte) ([]byte, error) {
+	return append(b, z.String()...), nil
+}
+
 // MarshalText implements the encoding.TextMarshaler interface.
 // It encodes the time zone as its IANA name (e.g. "America/New_York" or "UTC").
 func (z TimeZone) MarshalText() (text []byte, err error) {
-	return []byte(z.String()), nil
+	return z.AppendText(nil)
 }
 
 // UnmarshalText implements the encoding.TextUnmarshaler interface.

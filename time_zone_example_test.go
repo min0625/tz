@@ -39,6 +39,24 @@ func ExampleTimeZone_zeroValue() {
 	// true
 }
 
+func ExampleTimeZone_Equal() {
+	a := tz.MustLoadTimeZone("America/New_York")
+	b := tz.MustLoadTimeZone("America/New_York")
+
+	// Each load returns a distinct *time.Location, so == is unreliable,
+	// but Equal compares by IANA name.
+	fmt.Println(a == b)
+	fmt.Println(a.Equal(b))
+
+	// The zero value equals "UTC".
+	fmt.Println(tz.TimeZone{}.Equal(tz.MustLoadTimeZone("UTC")))
+
+	// Output:
+	// false
+	// true
+	// true
+}
+
 func ExampleMustLoadTimeZone() {
 	z := tz.MustLoadTimeZone("America/New_York")
 	fmt.Println(z.String())
@@ -89,6 +107,17 @@ func ExampleUTCTimeZone() {
 
 	// Output:
 	// true
+}
+
+func ExampleTimeZone_AppendText() {
+	z := tz.MustLoadTimeZone("Asia/Tokyo")
+
+	b := []byte("zone=")
+	b, _ = z.AppendText(b)
+	fmt.Println(string(b))
+
+	// Output:
+	// zone=Asia/Tokyo
 }
 
 func ExampleTimeZone_MarshalText() {
