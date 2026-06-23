@@ -146,6 +146,56 @@ func TestTimeZone_Location_NonUTC(t *testing.T) {
 	assert.NotSame(t, loc, time.UTC)
 }
 
+func TestTimeZone_Equal(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		z    tz.TimeZone
+		o    tz.TimeZone
+		want bool
+	}{
+		{
+			name: "BothZeroValue",
+			z:    tz.TimeZone{},
+			o:    tz.TimeZone{},
+			want: true,
+		},
+		{
+			name: "ZeroValueAndUTC",
+			z:    tz.TimeZone{},
+			o:    mustLoadTimeZone(t, "UTC"),
+			want: true,
+		},
+		{
+			name: "SameNameDistinctPointers",
+			z:    mustLoadTimeZone(t, "America/New_York"),
+			o:    mustLoadTimeZone(t, "America/New_York"),
+			want: true,
+		},
+		{
+			name: "Different",
+			z:    mustLoadTimeZone(t, "America/New_York"),
+			o:    mustLoadTimeZone(t, "Asia/Tokyo"),
+			want: false,
+		},
+		{
+			name: "NonUTCAndZeroValue",
+			z:    mustLoadTimeZone(t, "Asia/Tokyo"),
+			o:    tz.TimeZone{},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tt.want, tt.z.Equal(tt.o))
+			assert.Equal(t, tt.want, tt.o.Equal(tt.z))
+		})
+	}
+}
+
 func TestTimeZone_LoadString(t *testing.T) {
 	t.Parallel()
 
@@ -358,6 +408,52 @@ func TestTimeZone_Value(t *testing.T) {
 			t.Parallel()
 
 			got, err := tt.z.Value()
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestTimeZone_AppendText(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		z       tz.TimeZone
+		prefix  []byte
+		want    []byte
+		wantErr bool
+	}{
+		{
+			name:    "UTC",
+			z:       mustLoadTimeZone(t, "UTC"),
+			want:    []byte("UTC"),
+			wantErr: false,
+		},
+		{
+			name:    "Asia/Tokyo",
+			z:       mustLoadTimeZone(t, "Asia/Tokyo"),
+			want:    []byte("Asia/Tokyo"),
+			wantErr: false,
+		},
+		{
+			name:    "AppendsToExistingBuffer",
+			z:       mustLoadTimeZone(t, "Asia/Tokyo"),
+			prefix:  []byte("zone="),
+			want:    []byte("zone=Asia/Tokyo"),
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := tt.z.AppendText(tt.prefix)
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {
