@@ -46,6 +46,18 @@ func LoadTimeZone(name string) (TimeZone, error) {
 	return z, nil
 }
 
+// MustLoadTimeZone is like [LoadTimeZone] but panics if the name is invalid.
+// It is intended for use in variable initializations and tests where the
+// time zone name is known to be valid.
+func MustLoadTimeZone(name string) TimeZone {
+	z, err := LoadTimeZone(name)
+	if err != nil {
+		panic(err)
+	}
+
+	return z
+}
+
 // Location returns the *time.Location for this TimeZone.
 // The zero value (UTC) returns time.UTC; it never returns nil.
 func (z TimeZone) Location() *time.Location {

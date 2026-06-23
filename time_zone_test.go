@@ -76,6 +76,61 @@ func TestLoadTimeZone(t *testing.T) {
 	}
 }
 
+func TestMustLoadTimeZone(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		testName  string
+		name      string
+		want      tz.TimeZone
+		wantPanic bool
+	}{
+		{
+			testName:  "Empty",
+			name:      "",
+			want:      tz.TimeZone{},
+			wantPanic: false,
+		},
+		{
+			testName:  "UTC",
+			name:      "UTC",
+			want:      tz.TimeZone{},
+			wantPanic: false,
+		},
+		{
+			testName:  "America/New_York",
+			name:      "America/New_York",
+			want:      mustLoadTimeZone(t, "America/New_York"),
+			wantPanic: false,
+		},
+		{
+			testName:  "Local",
+			name:      "Local",
+			wantPanic: true,
+		},
+		{
+			testName:  "InvalidName",
+			name:      "Invalid/Zone",
+			wantPanic: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.testName, func(t *testing.T) {
+			t.Parallel()
+
+			if tt.wantPanic {
+				assert.Panics(t, func() {
+					tz.MustLoadTimeZone(tt.name)
+				})
+
+				return
+			}
+
+			assert.Equal(t, tt.want, tz.MustLoadTimeZone(tt.name))
+		})
+	}
+}
+
 func TestTimeZone_Location_ZeroValueReturnUTC(t *testing.T) {
 	t.Parallel()
 	assert.Same(t, tz.TimeZone{}.Location(), time.UTC)
